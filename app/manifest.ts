@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Aplikasi manajemen keuangan Jaya Maju Bersama',
     start_url: '/',
     display: 'standalone',
-    background_color: '#047857',
-    theme_color: '#047857',
+    background_color: '#000000',
+    theme_color: '#000000',
     icons: [
       {
         src: '/icon-192x192.png',

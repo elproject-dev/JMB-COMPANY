@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
 const outfit = Outfit({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,6 +22,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Jaya Makmur Bersama",
   description: "Aplikasi pencatatan Jaya Makmur Bersama",
+};
+
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -50,6 +57,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                window.deferredPrompt = e;
+              });
+            `,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider
@@ -63,11 +80,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </div>
             <ToastViewport />
-            <PwaInstallPrompt />
           </ToastProvider>
           <BottomNavigation />
           <DraggableFab />
           <Toaster />
+          <SonnerToaster position="top-center" />
+          <PwaInstallPrompt />
         </ThemeProvider>
       </body>
     </html>
