@@ -48,12 +48,6 @@ export function ChartEmas() {
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    if (isMobile) {
-      setTimeRange("7d")
-    }
-  }, [isMobile])
-
-  React.useEffect(() => {
     async function fetchGoldData() {
       setLoading(true)
       try {
