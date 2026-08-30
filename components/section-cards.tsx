@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 
-import { WalletIcon, HandCoins, ArrowCircleDown, ArrowCircleUp } from "@phosphor-icons/react"
+import { WalletIcon, CurrencyCircleDollarIcon, ArrowCircleDown, ArrowCircleUp } from "@phosphor-icons/react"
 
 import { supabase } from "@/lib/supabase"
 
@@ -122,7 +122,7 @@ export function SectionCards() {
           <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPenjualan)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <HandCoins weight="duotone" className="w-6 h-6" />
+          <CurrencyCircleDollarIcon weight="duotone" className="w-6 h-6" />
         </div>
       </div>
 

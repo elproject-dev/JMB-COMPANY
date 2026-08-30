@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toast";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 
-const outfit = Outfit({subsets:['latin'],variable:'--font-sans'});
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-sans' });
 
-const jetbrainsMono = JetBrains_Mono({subsets:['latin'],variable:'--font-mono'});
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

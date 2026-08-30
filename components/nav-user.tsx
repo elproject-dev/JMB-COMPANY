@@ -142,7 +142,7 @@ export function NavUser({
           <DialogHeader>
             <DialogTitle>Ubah Warna Tema</DialogTitle>
             <DialogDescription>
-              Pilih warna aksen utama yang Anda inginkan (contoh tampilan).
+              Pilih warna aksen utama yang Anda inginkan.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap gap-4 py-6 justify-center">

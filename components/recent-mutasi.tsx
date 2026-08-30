@@ -963,7 +963,7 @@ export function RecentMutasi() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px] text-center border-r whitespace-nowrap">No</TableHead>
-                  <TableHead className="w-[140px] border-r whitespace-nowrap">Tanggal</TableHead>
+                  <TableHead className="w-[140px] text-center border-r whitespace-nowrap">Tanggal</TableHead>
                   <TableHead className="border-r whitespace-nowrap">Keterangan</TableHead>
                   <TableHead className="border-r text-right whitespace-nowrap text-primary">Masuk (Rp)</TableHead>
                   <TableHead className="border-r text-right whitespace-nowrap text-red-600">Keluar (Rp)</TableHead>
@@ -981,7 +981,7 @@ export function RecentMutasi() {
                   mutasi.map((m: any, idx: number) => (
                     <TableRow key={m.id + "-" + idx} className="h-[49px]">
                       <TableCell className="font-medium text-center border-r">{idx + 1}</TableCell>
-                      <TableCell className="border-r whitespace-nowrap">{formatTanggalOutput(m.tanggal)}</TableCell>
+                      <TableCell className="text-center border-r whitespace-nowrap">{formatTanggalOutput(m.tanggal)}</TableCell>
                       <TableCell className="border-r">{m.keterangan}</TableCell>
                       <TableCell className="border-r text-right text-primary">
                         {m.jenisMutasi === "masuk" ? formatRupiah(m.nominal) : "-"}
