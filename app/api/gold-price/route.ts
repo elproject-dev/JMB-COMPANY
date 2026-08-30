@@ -47,9 +47,18 @@ export async function GET() {
     const d = new Date()
     d.setDate(today.getDate() - i)
     
-    // Bergerak mundur: fluktuasi acak untuk harga hari sebelumnya
-    const change = Math.floor(Math.random() * 30000) - 15000
-    simulatedPrice += change // harga kemarin = harga hari ini + selisih acak
+    const dateStr = d.toISOString().split('T')[0]
+    
+    // Bikin hash sederhana dari tanggal agar hasilnya konsisten/tetap
+    let hash = 0;
+    for (let j = 0; j < dateStr.length; j++) {
+      hash = dateStr.charCodeAt(j) + ((hash << 5) - hash);
+    }
+    
+    // Fluktuasi deterministik: -15000 hingga +15000 (konsisten untuk tanggal yang sama)
+    const change = Math.floor(Math.sin(hash) * 15000)
+    
+    simulatedPrice += change // harga kemarin = harga hari ini + selisih deterministik
     
     data.push({
       date: d.toISOString().split('T')[0],

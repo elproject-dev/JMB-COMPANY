@@ -17,7 +17,7 @@ import { SquaresFourIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraI
 
 const data = {
   user: {
-    name: "Toko Mas JMB",
+    name: "JMB Company",
     email: "admin@jmb.com",
     avatar: "",
   },

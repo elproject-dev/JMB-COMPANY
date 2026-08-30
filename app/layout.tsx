@@ -26,8 +26,10 @@ export const metadata: Metadata = {
 import { ThemeProvider } from "@/components/theme-provider";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { DraggableFab } from "@/components/draggable-fab";
+import { ToastProvider, ToastViewport } from "@/components/ui/toast";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
@@ -56,9 +58,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
-          <div className="pb-16 md:pb-0 flex flex-1 flex-col h-full">
-            {children}
-          </div>
+          <ToastProvider>
+            <div className="pb-16 md:pb-0 flex flex-1 flex-col h-full">
+              {children}
+            </div>
+            <ToastViewport />
+            <PwaInstallPrompt />
+          </ToastProvider>
           <BottomNavigation />
           <DraggableFab />
           <Toaster />

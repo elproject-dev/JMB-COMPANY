@@ -152,7 +152,7 @@ export function ChartEmas() {
                 axisLine={false}
                 tickMargin={8}
                 minTickGap={32}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                 tickFormatter={(value) => {
                   const date = new Date(value)
                   return date.toLocaleDateString("id-ID", {

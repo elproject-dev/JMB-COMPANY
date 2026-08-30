@@ -124,9 +124,12 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <SignOutIcon
-              />
+            <DropdownMenuItem onClick={async () => {
+              const { supabase } = await import('@/lib/supabase')
+              await supabase.auth.signOut()
+              window.location.href = '/login'
+            }}>
+              <SignOutIcon />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

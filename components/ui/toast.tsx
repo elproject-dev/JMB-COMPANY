@@ -62,7 +62,7 @@ function ToastContent({ className, ...props }: ToastPrimitive.Content.Props) {
     <ToastPrimitive.Content
       data-slot="toast-content"
       className={cn(
-        "flex h-full items-center gap-3 overflow-hidden p-4 bg-gradient-to-br from-white/60 via-white/40 to-white/20 backdrop-blur-lg border border-white/30 rounded-lg shadow-2xl transition-opacity duration-250 ease-[cubic-bezier(0.22,1,0.36,1)] data-behind:opacity-0 data-expanded:opacity-100",
+        "flex h-full items-center gap-3 overflow-hidden p-4 backdrop-blur-lg border rounded-none shadow-2xl transition-opacity duration-250 ease-[cubic-bezier(0.22,1,0.36,1)] data-behind:opacity-0 data-expanded:opacity-100",
         className
       )}
       {...props}
@@ -182,19 +182,35 @@ function ToastIcon({ type }: { type: string | undefined }) {
 function ToastList() {
   const { toasts } = ToastPrimitive.useToastManager()
 
-  return toasts.map((toastItem) => (
-    <Toast key={toastItem.id} toast={toastItem}>
-      <ToastContent>
-        <ToastIcon type={toastItem.type} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <ToastTitle />
-          <ToastDescription />
-        </div>
-        <ToastAction />
-        <ToastClose />
-      </ToastContent>
-    </Toast>
-  ))
+  return toasts.map((toastItem) => {
+    let typeClass = "bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-[#1f1f1f]/95 dark:via-[#1f1f1f]/90 dark:to-[#1f1f1f]/80 border-white/30 dark:border-white/10";
+    let titleClass = "text-zinc-900 dark:text-zinc-100";
+    let descClass = "text-zinc-500 dark:text-zinc-400";
+
+    if (toastItem.type === 'success') {
+      typeClass = "bg-gradient-to-br from-emerald-100 via-emerald-50 to-white dark:from-emerald-950 dark:via-emerald-900/80 dark:to-[#1f1f1f]/90 border-emerald-200 dark:border-emerald-800";
+      titleClass = "text-emerald-700 dark:text-emerald-400";
+      descClass = "text-emerald-600/80 dark:text-emerald-400/80";
+    } else if (toastItem.type === 'error') {
+      typeClass = "bg-gradient-to-br from-red-100 via-red-50 to-white dark:from-red-950 dark:via-red-900/80 dark:to-[#1f1f1f]/90 border-red-200 dark:border-red-800";
+      titleClass = "text-red-700 dark:text-red-400";
+      descClass = "text-red-600/80 dark:text-red-400/80";
+    }
+
+    return (
+      <Toast key={toastItem.id} toast={toastItem}>
+        <ToastContent className={typeClass}>
+          <ToastIcon type={toastItem.type} />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <ToastTitle className={titleClass} />
+            <ToastDescription className={descClass} />
+          </div>
+          <ToastAction />
+          <ToastClose />
+        </ToastContent>
+      </Toast>
+    )
+  })
 }
 
 function Toaster({

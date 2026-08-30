@@ -53,7 +53,9 @@ export function RecentMutasi() {
       .select('*')
       .eq('is_deleted', false)
 
-    const mappedKas = (dataKas || []).map((k: any) => {
+    const mappedKas = (dataKas || [])
+      .filter((k: any) => k.jenis !== 'penjualan_emas' && k.jenis !== 'pembelian_emas')
+      .map((k: any) => {
       return {
         id: new Date(k.created_at).getTime(),
         tanggal: k.tanggal,
@@ -270,20 +272,20 @@ export function RecentMutasi() {
   const handleDownloadPelangganExcel = async () => {
     try {
       setIsDownloadingPelanggan(true)
-      
+
       const { data: pData } = await supabase.from('pelanggan').select('*').eq('is_deleted', false).order('created_at', { ascending: true })
       const { data: txData } = await supabase.from('transaksi').select('*').eq('is_deleted', false)
       const { data: piutangData } = await supabase.from('piutang').select('*').eq('is_deleted', false)
       const { data: kasData } = await supabase.from('kas').select('*').eq('is_deleted', false)
-      
+
       const pelangganList = pData || []
       const transaksiList = txData || []
       const piutangList = piutangData || []
       const kasList = kasData || []
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Pelanggan")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Nama", key: "nama", width: 30 },
@@ -293,7 +295,7 @@ export function RecentMutasi() {
         { header: "Sisa Hutang (Rp)", key: "total_hutang", width: 20 },
         { header: "Total Akhir (Rp)", key: "total_akhir", width: 20 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -307,30 +309,30 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       pelangganList.forEach((p, idx) => {
         const namaPelanggan = p.nama
-        
+
         const tx = transaksiList.filter((t: any) => t.pelanggan === namaPelanggan)
         const totalTx = tx.reduce((acc: number, curr: any) => acc + (Number(curr.jumlah_total) || 0), 0)
-        
+
         const piutangSemua = piutangList.filter((ptg: any) => ptg.pelanggan === namaPelanggan || ptg.nama === namaPelanggan)
         const piutangAktif = piutangSemua.filter((ptg: any) => ptg.status !== "lunas")
-        
+
         const cicilanList = kasList.filter((k: any) =>
           k.jenis === "pemasukan" &&
           (k.keterangan?.includes(`Cicilan piutang: ${namaPelanggan}`) || k.keterangan?.includes(`Pelunasan piutang: ${namaPelanggan}`))
         )
-        
+
         const count = tx.length + piutangSemua.length + cicilanList.length
-        
+
         const totalHutang = piutangAktif.reduce((acc: number, curr: any) => {
           const sisa = curr.sisa_hutang !== undefined ? curr.sisa_hutang : curr.jumlah
           return acc + (Number(sisa) || 0)
         }, 0)
-        
+
         const netTotal = totalTx - totalHutang
-        
+
         const row = worksheet.addRow({
           no: idx + 1,
           nama: p.nama,
@@ -340,27 +342,27 @@ export function RecentMutasi() {
           total_hutang: totalHutang,
           total_akhir: netTotal
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("jml_tx").alignment = { horizontal: "right" }
         row.getCell("total_tx").alignment = { horizontal: "right" }
         row.getCell("total_hutang").alignment = { horizontal: "right" }
         row.getCell("total_akhir").alignment = { horizontal: "right" }
-        
+
         row.getCell("jml_tx").numFmt = "#,##0"
         row.getCell("total_tx").numFmt = "#,##0"
         row.getCell("total_hutang").numFmt = "#,##0"
         row.getCell("total_akhir").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Pelanggan.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Pelanggan:", error)
     } finally {
@@ -371,21 +373,21 @@ export function RecentMutasi() {
   const handleDownloadPembelianExcel = async () => {
     try {
       setIsDownloadingPembelian(true)
-      
+
       const { data: txData } = await supabase
         .from('transaksi')
         .select('*')
         .eq('jenis', 'pembelian')
         .eq('is_deleted', false)
         .order('tanggal', { ascending: true })
-      
+
       const rawTransaksiList = txData || []
-      
+
       const transaksiList = rawTransaksiList.filter((t: any) => {
         if (!startDate && !endDate) return true
-        
+
         const itemDate = new Date(t.tanggal).setHours(0, 0, 0, 0)
-        
+
         if (startDate && endDate) {
           return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
         } else if (startDate) {
@@ -395,10 +397,10 @@ export function RecentMutasi() {
         }
         return true
       })
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Pembelian")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Tanggal", key: "tanggal", width: 15 },
@@ -408,7 +410,7 @@ export function RecentMutasi() {
         { header: "Harga / Gram (Rp)", key: "harga", width: 20 },
         { header: "Total (Rp)", key: "total", width: 20 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -422,7 +424,7 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       transaksiList.forEach((t, idx) => {
         const row = worksheet.addRow({
           no: idx + 1,
@@ -433,26 +435,26 @@ export function RecentMutasi() {
           harga: t.harga_per_gram,
           total: t.jumlah_total
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
         row.getCell("bk").alignment = { horizontal: "right" }
         row.getCell("bb").alignment = { horizontal: "right" }
         row.getCell("harga").alignment = { horizontal: "right" }
         row.getCell("total").alignment = { horizontal: "right" }
-        
+
         row.getCell("harga").numFmt = "#,##0"
         row.getCell("total").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Pembelian.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Pembelian:", error)
     } finally {
@@ -464,21 +466,21 @@ export function RecentMutasi() {
   const handleDownloadPenjualanExcel = async () => {
     try {
       setIsDownloadingPenjualan(true)
-      
+
       const { data: txData } = await supabase
         .from('transaksi')
         .select('*')
         .eq('jenis', 'penjualan')
         .eq('is_deleted', false)
         .order('tanggal', { ascending: true })
-      
+
       const rawTransaksiList = txData || []
-      
+
       const transaksiList = rawTransaksiList.filter((t: any) => {
         if (!startDate && !endDate) return true
-        
+
         const itemDate = new Date(t.tanggal).setHours(0, 0, 0, 0)
-        
+
         if (startDate && endDate) {
           return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
         } else if (startDate) {
@@ -488,10 +490,10 @@ export function RecentMutasi() {
         }
         return true
       })
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Penjualan")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Tanggal", key: "tanggal", width: 15 },
@@ -501,7 +503,7 @@ export function RecentMutasi() {
         { header: "Harga / Gram (Rp)", key: "harga", width: 20 },
         { header: "Total (Rp)", key: "total", width: 20 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -515,7 +517,7 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       transaksiList.forEach((t, idx) => {
         const row = worksheet.addRow({
           no: idx + 1,
@@ -526,26 +528,26 @@ export function RecentMutasi() {
           harga: t.harga_per_gram,
           total: t.jumlah_total
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
         row.getCell("bk").alignment = { horizontal: "right" }
         row.getCell("bb").alignment = { horizontal: "right" }
         row.getCell("harga").alignment = { horizontal: "right" }
         row.getCell("total").alignment = { horizontal: "right" }
-        
+
         row.getCell("harga").numFmt = "#,##0"
         row.getCell("total").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Penjualan.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Penjualan:", error)
     } finally {
@@ -557,21 +559,21 @@ export function RecentMutasi() {
   const handleDownloadPengeluaranExcel = async () => {
     try {
       setIsDownloadingPengeluaran(true)
-      
+
       const { data: kasData } = await supabase
         .from('kas')
         .select('*')
         .eq('jenis', 'pengeluaran')
         .eq('is_deleted', false)
         .order('tanggal', { ascending: true })
-      
+
       const rawKasList = kasData || []
-      
+
       const kasList = rawKasList.filter((k: any) => {
         if (!startDate && !endDate) return true
-        
+
         const itemDate = new Date(k.tanggal).setHours(0, 0, 0, 0)
-        
+
         if (startDate && endDate) {
           return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
         } else if (startDate) {
@@ -581,17 +583,17 @@ export function RecentMutasi() {
         }
         return true
       })
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Pengeluaran")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Tanggal", key: "tanggal", width: 15 },
         { header: "Keterangan / Keperluan", key: "keterangan", width: 40 },
         { header: "Jumlah (Rp)", key: "jumlah", width: 20 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -605,7 +607,7 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       kasList.forEach((k, idx) => {
         const row = worksheet.addRow({
           no: idx + 1,
@@ -613,22 +615,22 @@ export function RecentMutasi() {
           keterangan: k.keterangan,
           jumlah: k.jumlah
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
         row.getCell("jumlah").alignment = { horizontal: "right" }
-        
+
         row.getCell("jumlah").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Pengeluaran.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Pengeluaran:", error)
     } finally {
@@ -640,21 +642,21 @@ export function RecentMutasi() {
   const handleDownloadPemasukanExcel = async () => {
     try {
       setIsDownloadingPemasukan(true)
-      
+
       const { data: kasData } = await supabase
         .from('kas')
         .select('*')
         .eq('jenis', 'pemasukan')
         .eq('is_deleted', false)
         .order('tanggal', { ascending: true })
-      
+
       const rawKasList = kasData || []
-      
+
       const kasList = rawKasList.filter((k: any) => {
         if (!startDate && !endDate) return true
-        
+
         const itemDate = new Date(k.tanggal).setHours(0, 0, 0, 0)
-        
+
         if (startDate && endDate) {
           return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
         } else if (startDate) {
@@ -664,17 +666,17 @@ export function RecentMutasi() {
         }
         return true
       })
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Pemasukan")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Tanggal", key: "tanggal", width: 15 },
         { header: "Keterangan / Sumber", key: "keterangan", width: 40 },
         { header: "Jumlah (Rp)", key: "jumlah", width: 20 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -688,7 +690,7 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       kasList.forEach((k, idx) => {
         const row = worksheet.addRow({
           no: idx + 1,
@@ -696,22 +698,22 @@ export function RecentMutasi() {
           keterangan: k.keterangan,
           jumlah: k.jumlah
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
         row.getCell("jumlah").alignment = { horizontal: "right" }
-        
+
         row.getCell("jumlah").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Pemasukan.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Pemasukan:", error)
     } finally {
@@ -723,20 +725,20 @@ export function RecentMutasi() {
   const handleDownloadPiutangExcel = async () => {
     try {
       setIsDownloadingPiutang(true)
-      
+
       const { data: piutangData } = await supabase
         .from('piutang')
         .select('*')
         .eq('is_deleted', false)
         .order('tanggal', { ascending: true })
-      
+
       const rawPiutangList = piutangData || []
-      
+
       const piutangList = rawPiutangList.filter((p: any) => {
         if (!startDate && !endDate) return true
-        
+
         const itemDate = new Date(p.tanggal).setHours(0, 0, 0, 0)
-        
+
         if (startDate && endDate) {
           return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
         } else if (startDate) {
@@ -746,10 +748,10 @@ export function RecentMutasi() {
         }
         return true
       })
-      
+
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet("Data Piutang")
-      
+
       worksheet.columns = [
         { header: "No", key: "no", width: 5 },
         { header: "Tanggal", key: "tanggal", width: 15 },
@@ -760,7 +762,7 @@ export function RecentMutasi() {
         { header: "Jatuh Tempo", key: "jatuh_tempo", width: 15 },
         { header: "Status", key: "status", width: 15 },
       ]
-      
+
       const headerRow = worksheet.getRow(1)
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
@@ -774,10 +776,10 @@ export function RecentMutasi() {
         }
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
       })
-      
+
       piutangList.forEach((p, idx) => {
         const sisaHutang = p.sisa_hutang !== undefined ? Number(p.sisa_hutang) : (p.status === 'lunas' ? 0 : Number(p.jumlah))
-        
+
         const row = worksheet.addRow({
           no: idx + 1,
           tanggal: formatTanggalOutput(p.tanggal),
@@ -788,26 +790,26 @@ export function RecentMutasi() {
           jatuh_tempo: p.jatuh_tempo ? formatTanggalOutput(p.jatuh_tempo) : "-",
           status: p.status === "lunas" ? "Lunas" : "Belum Lunas"
         })
-        
+
         row.eachCell((cell) => {
           cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
         })
-        
+
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
         row.getCell("jatuh_tempo").alignment = { horizontal: "center" }
         row.getCell("status").alignment = { horizontal: "center" }
         row.getCell("total").alignment = { horizontal: "right" }
         row.getCell("sisa").alignment = { horizontal: "right" }
-        
+
         row.getCell("total").numFmt = "#,##0"
         row.getCell("sisa").numFmt = "#,##0"
       })
-      
+
       const buffer = await workbook.xlsx.writeBuffer()
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
       saveAs(blob, "Data_Piutang.xlsx")
-      
+
     } catch (error) {
       console.error("Gagal mengunduh Excel Piutang:", error)
     } finally {
@@ -850,11 +852,11 @@ export function RecentMutasi() {
               <span className="hidden sm:inline">Unduh Data</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("mutasi")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Mutasi
@@ -862,47 +864,47 @@ export function RecentMutasi() {
               <DropdownMenuItem onClick={handleDownloadPelangganExcel} disabled={isDownloadingPelanggan} className="cursor-pointer">
                 {isDownloadingPelanggan ? "Mengunduh..." : "Data Pelanggan"}
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("pembelian")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Pembelian
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("penjualan")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Penjualan
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("pengeluaran")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Pengeluaran
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("pemasukan")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Pemasukan
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setDownloadType("piutang")
                   setIsDownloadModalOpen(true)
-                }} 
+                }}
                 className="cursor-pointer"
               >
                 Data Piutang
