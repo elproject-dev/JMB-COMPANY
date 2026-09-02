@@ -20,7 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { DotsThreeVertical } from "@phosphor-icons/react"
+import { DotsThreeVertical, ShoppingCart, Scales, Receipt } from "@phosphor-icons/react"
+import { SlidersHorizontal } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import {
   Pagination,
   PaginationContent,
@@ -50,6 +59,14 @@ export default function PenjualanPage() {
   const [deletingTransaksi, setDeletingTransaksi] = useState<any | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
 
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false)
+  const [filterStartDate, setFilterStartDate] = useState<string>("")
+  const [filterEndDate, setFilterEndDate] = useState<string>("")
+  const [tempStartDate, setTempStartDate] = useState<string>("")
+  const [tempEndDate, setTempEndDate] = useState<string>("")
+  const [isTempStartCalendarOpen, setIsTempStartCalendarOpen] = useState(false)
+  const [isTempEndCalendarOpen, setIsTempEndCalendarOpen] = useState(false)
+
   const [editingTransaksi, setEditingTransaksi] = useState<any | null>(null)
   const [editTanggal, setEditTanggal] = useState("")
   const [editPelanggan, setEditPelanggan] = useState("")
@@ -59,20 +76,29 @@ export default function PenjualanPage() {
   const [editTotal, setEditTotal] = useState("")
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
-  async function loadData() {
-    const { data } = await supabase
+  async function loadData(start: string = filterStartDate, end: string = filterEndDate) {
+    let query = supabase
       .from('transaksi')
       .select('*')
       .eq('jenis', 'penjualan')
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
 
+    if (start) {
+      query = query.gte('tanggal', start)
+    }
+    if (end) {
+      query = query.lte('tanggal', end)
+    }
+
+    const { data } = await query
     if (data) setTransaksi(data)
   }
 
   React.useEffect(() => {
-    loadData()
-  }, [])
+    loadData(filterStartDate, filterEndDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStartDate, filterEndDate])
 
   React.useEffect(() => {
     const bbNum = parseFloat(editBb.replace(/,/g, '.'))
@@ -186,6 +212,11 @@ export default function PenjualanPage() {
   const totalPages = Math.ceil(transaksi.length / itemsPerPage)
   const currentTransaksi = transaksi.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
+  const totalPenjualan = transaksi.reduce((acc, curr) => acc + (Number(curr.jumlah_total) || 0), 0)
+  const totalBK = transaksi.reduce((acc, curr) => acc + (Number(curr.bk) || 0), 0)
+  const totalBB = transaksi.reduce((acc, curr) => acc + (Number(curr.bb) || 0), 0)
+  const totalTransaksiCount = transaksi.length
+
   return (
     <SidebarProvider
       style={
@@ -199,10 +230,64 @@ export default function PenjualanPage() {
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col p-4 md:p-6 w-full">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4 mb-6">
+            <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Penjualan</p>
+                <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {totalPenjualan.toLocaleString('id-ID')}</h3>
+              </div>
+              <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
+                <ShoppingCart weight="duotone" className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Berat Kotor (BK)</p>
+                <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">{totalBK.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} g</h3>
+              </div>
+              <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
+                <Scales weight="duotone" className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Berat Bersih (BB)</p>
+                <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">{totalBB.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} g</h3>
+              </div>
+              <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
+                <Scales weight="duotone" className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Transaksi</p>
+                <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">{totalTransaksiCount}</h3>
+              </div>
+              <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
+                <Receipt weight="duotone" className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-1xl font-bold tracking-tight">
               {editingTransaksi ? "Edit Transaksi Penjualan" : "Daftar Transaksi Penjualan"}
             </h1>
+            {!editingTransaksi && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full w-8 h-8 shadow-sm flex items-center justify-center transition-transform active:scale-95"
+                onClick={() => {
+                  setTempStartDate(filterStartDate)
+                  setTempEndDate(filterEndDate)
+                  setIsFilterModalOpen(true)
+                }}
+                title="Filter Tanggal"
+              >
+                <SlidersHorizontal className="w-4 h-4" strokeWidth={2.5} />
+              </Button>
+            )}
           </div>
 
           {editingTransaksi ? (
@@ -483,7 +568,97 @@ export default function PenjualanPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-
+      <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+        <DialogContent className="rounded-none sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Filter Tanggal Penjualan</DialogTitle>
+            <DialogDescription>
+              Pilih rentang tanggal untuk menyaring transaksi penjualan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Tanggal Mulai</Label>
+              <Popover open={isTempStartCalendarOpen} onOpenChange={setIsTempStartCalendarOpen}>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal rounded-none ${!tempStartDate && "text-muted-foreground"}`}
+                    >
+                      {tempStartDate ? formatTanggalOutput(tempStartDate) : <span>Pilih tanggal mulai</span>}
+                    </Button>
+                  }
+                />
+                <PopoverContent className="w-auto p-0 rounded-none border" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={tempStartDate ? new Date(tempStartDate) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setTempStartDate(format(date, "yyyy-MM-dd"))
+                        setIsTempStartCalendarOpen(false)
+                      }
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <Label>Tanggal Akhir</Label>
+              <Popover open={isTempEndCalendarOpen} onOpenChange={setIsTempEndCalendarOpen}>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant={"outline"}
+                      className={`w-full justify-start text-left font-normal rounded-none ${!tempEndDate && "text-muted-foreground"}`}
+                    >
+                      {tempEndDate ? formatTanggalOutput(tempEndDate) : <span>Pilih tanggal akhir</span>}
+                    </Button>
+                  }
+                />
+                <PopoverContent className="w-auto p-0 rounded-none border" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={tempEndDate ? new Date(tempEndDate) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setTempEndDate(format(date, "yyyy-MM-dd"))
+                        setIsTempEndCalendarOpen(false)
+                      }
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              className="rounded-none"
+              onClick={() => {
+                setTempStartDate("")
+                setTempEndDate("")
+                setFilterStartDate("")
+                setFilterEndDate("")
+                setIsFilterModalOpen(false)
+              }}
+            >
+              Reset Filter
+            </Button>
+            <Button
+              className="rounded-none bg-primary text-primary-foreground"
+              onClick={() => {
+                setFilterStartDate(tempStartDate)
+                setFilterEndDate(tempEndDate)
+                setIsFilterModalOpen(false)
+              }}
+            >
+              Terapkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   )
 }
