@@ -19,6 +19,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +40,8 @@ export function RecentMutasi() {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false)
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false)
+  const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isDownloadingPelanggan, setIsDownloadingPelanggan] = useState(false)
   const [isDownloadingPembelian, setIsDownloadingPembelian] = useState(false)
@@ -757,9 +762,7 @@ export function RecentMutasi() {
         { header: "Tanggal", key: "tanggal", width: 15 },
         { header: "Peminjam", key: "peminjam", width: 30 },
         { header: "Keterangan", key: "keterangan", width: 30 },
-        { header: "Total Hutang (Rp)", key: "total", width: 20 },
-        { header: "Sisa Hutang (Rp)", key: "sisa", width: 20 },
-        { header: "Jatuh Tempo", key: "jatuh_tempo", width: 15 },
+        { header: "Hutang Saat Ini (Rp)", key: "sisa", width: 20 },
         { header: "Status", key: "status", width: 15 },
       ]
 
@@ -767,7 +770,7 @@ export function RecentMutasi() {
       headerRow.eachCell((cell, colNumber) => {
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
         cell.font = { bold: true, color: { argb: "FF000000" } }
-        if (colNumber === 5 || colNumber === 6) {
+        if (colNumber === 5) {
           cell.alignment = { vertical: "middle", horizontal: "right" }
         } else if (colNumber === 3 || colNumber === 4) {
           cell.alignment = { vertical: "middle", horizontal: "left" }
@@ -785,9 +788,7 @@ export function RecentMutasi() {
           tanggal: formatTanggalOutput(p.tanggal),
           peminjam: p.nama,
           keterangan: p.keterangan || "-",
-          total: Number(p.jumlah) || 0,
           sisa: sisaHutang,
-          jatuh_tempo: p.jatuh_tempo ? formatTanggalOutput(p.jatuh_tempo) : "-",
           status: p.status === "lunas" ? "Lunas" : "Belum Lunas"
         })
 
@@ -797,12 +798,9 @@ export function RecentMutasi() {
 
         row.getCell("no").alignment = { horizontal: "center" }
         row.getCell("tanggal").alignment = { horizontal: "center" }
-        row.getCell("jatuh_tempo").alignment = { horizontal: "center" }
         row.getCell("status").alignment = { horizontal: "center" }
-        row.getCell("total").alignment = { horizontal: "right" }
         row.getCell("sisa").alignment = { horizontal: "right" }
 
-        row.getCell("total").numFmt = "#,##0"
         row.getCell("sisa").numFmt = "#,##0"
       })
 
@@ -1014,25 +1012,69 @@ export function RecentMutasi() {
               <Label htmlFor="start-date" className="text-right">
                 Mulai
               </Label>
-              <Input
-                id="start-date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="col-span-3 cursor-pointer"
-              />
+              <div className="col-span-3">
+                <Popover open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        id="start-date"
+                        variant={"outline"}
+                        className={`w-full rounded-none justify-start text-left font-normal ${!startDate && "text-muted-foreground"}`}
+                      >
+                        {startDate ? format(new Date(startDate), "dd MMM yyyy") : <span>Pilih tanggal</span>}
+                      </Button>
+                    }
+                  />
+                  <PopoverContent className="w-auto p-0 rounded-none border" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate ? new Date(startDate) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setStartDate(format(date, "yyyy-MM-dd"))
+                          setIsStartCalendarOpen(false)
+                        } else {
+                          setStartDate("")
+                        }
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="end-date" className="text-right">
                 Akhir
               </Label>
-              <Input
-                id="end-date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="col-span-3 cursor-pointer"
-              />
+              <div className="col-span-3">
+                <Popover open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        id="end-date"
+                        variant={"outline"}
+                        className={`w-full rounded-none justify-start text-left font-normal ${!endDate && "text-muted-foreground"}`}
+                      >
+                        {endDate ? format(new Date(endDate), "dd MMM yyyy") : <span>Pilih tanggal</span>}
+                      </Button>
+                    }
+                  />
+                  <PopoverContent className="w-auto p-0 rounded-none border" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate ? new Date(endDate) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setEndDate(format(date, "yyyy-MM-dd"))
+                          setIsEndCalendarOpen(false)
+                        } else {
+                          setEndDate("")
+                        }
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
           <DialogFooter>
