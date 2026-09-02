@@ -107,8 +107,8 @@ export function DraggableFab() {
         {/* Menu Items */}
         <div
           className={`flex flex-col gap-3 mb-4 transition-all duration-300 ease-in-out ${isOpen
-              ? "opacity-100 translate-y-0 pointer-events-auto"
-              : "opacity-0 translate-y-10 pointer-events-none"
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-10 pointer-events-none"
             }`}
         >
           <button
