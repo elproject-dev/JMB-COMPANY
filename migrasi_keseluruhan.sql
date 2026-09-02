@@ -117,3 +117,15 @@ CREATE TABLE kategori_kas (
     jenis TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migration 6: 20260902100000_create_piutang_cicilan.sql
+-- Create Table: piutang_cicilan
+CREATE TABLE piutang_cicilan (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    piutang_id UUID REFERENCES piutang(id) ON DELETE CASCADE,
+    tanggal DATE NOT NULL,
+    jumlah NUMERIC NOT NULL DEFAULT 0,
+    keterangan TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+\n-- Migration 7: Add jenis to piutang_cicilan\nALTER TABLE piutang_cicilan ADD COLUMN jenis TEXT NOT NULL DEFAULT 'bayar';
