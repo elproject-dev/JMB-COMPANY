@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from "react"
 
-import { WalletIcon, CurrencyCircleDollarIcon, ArrowCircleDown, ArrowCircleUp } from "@phosphor-icons/react"
+import { WalletIcon, CurrencyCircleDollarIcon, ArrowCircleDown, ArrowCircleUp, ShoppingCartIcon } from "@phosphor-icons/react"
 
 import { supabase } from "@/lib/supabase"
 
 export function SectionCards() {
   const [totalSaldo, setTotalSaldo] = useState(0)
   const [totalPenjualan, setTotalPenjualan] = useState(0)
+  const [totalPembelian, setTotalPembelian] = useState(0)
   const [totalPemasukan, setTotalPemasukan] = useState(0)
   const [totalPengeluaran, setTotalPengeluaran] = useState(0)
 
@@ -32,6 +33,17 @@ export function SectionCards() {
       if (dataTx && !errTx) {
         const sumPenjualan = dataTx.reduce((acc: number, curr: any) => acc + (Number(curr.jumlah_total) || 0), 0)
         setTotalPenjualan(sumPenjualan)
+      }
+
+      // Hitung Total Pembelian dari tabel transaksi
+      const { data: dataTxBeli, error: errTxBeli } = await supabase
+        .from('transaksi')
+        .select('jumlah_total')
+        .eq('jenis', 'pembelian')
+        .eq('is_deleted', false)
+      if (dataTxBeli && !errTxBeli) {
+        const sumPembelian = dataTxBeli.reduce((acc: number, curr: any) => acc + (Number(curr.jumlah_total) || 0), 0)
+        setTotalPembelian(sumPembelian)
       }
 
       // 3. Hitung Pemasukan & Pengeluaran dari tabel kas
@@ -97,6 +109,7 @@ export function SectionCards() {
 
   const animTotalSaldo = useCountUp(totalSaldo)
   const animTotalPenjualan = useCountUp(totalPenjualan)
+  const animTotalPembelian = useCountUp(totalPembelian)
   const animTotalPemasukan = useCountUp(totalPemasukan)
   const animTotalPengeluaran = useCountUp(totalPengeluaran)
 
@@ -105,44 +118,54 @@ export function SectionCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @3xl/main:grid-cols-3 @6xl/main:grid-cols-5">
       <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Saldo</p>
-          <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalSaldo)}</h3>
+          <p className="text-xs font-medium text-muted-foreground">Total Saldo</p>
+          <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalSaldo)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <WalletIcon weight="duotone" className="w-6 h-6" />
+          <WalletIcon weight="duotone" className="w-5 h-5" />
         </div>
       </div>
 
       <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Penjualan</p>
-          <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPenjualan)}</h3>
+          <p className="text-xs font-medium text-muted-foreground">Total Pembelian</p>
+          <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPembelian)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <CurrencyCircleDollarIcon weight="duotone" className="w-6 h-6" />
+          <ShoppingCartIcon weight="duotone" className="w-5 h-5" />
         </div>
       </div>
 
       <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Pemasukan Kas</p>
-          <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPemasukan)}</h3>
+          <p className="text-xs font-medium text-muted-foreground">Total Penjualan</p>
+          <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPenjualan)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <ArrowCircleUp weight="duotone" className="w-6 h-6" />
+          <CurrencyCircleDollarIcon weight="duotone" className="w-5 h-5" />
         </div>
       </div>
 
       <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Pengeluaran Kas</p>
-          <h3 className="text-2xl font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPengeluaran)}</h3>
+          <p className="text-xs font-medium text-muted-foreground">Total Pemasukan Kas</p>
+          <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPemasukan)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <ArrowCircleDown weight="duotone" className="w-6 h-6" />
+          <ArrowCircleUp weight="duotone" className="w-5 h-5" />
+        </div>
+      </div>
+
+      <div className="relative rounded-none border bg-linear-to-t from-primary/5 to-card p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">Total Pengeluaran Kas</p>
+          <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPengeluaran)}</h3>
+        </div>
+        <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
+          <ArrowCircleDown weight="duotone" className="w-5 h-5" />
         </div>
       </div>
     </div>

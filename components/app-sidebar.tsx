@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SquaresFourIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, GearIcon, QuestionIcon, MagnifyingGlassIcon, DatabaseIcon, ChartLineIcon, FileIcon, CommandIcon, WalletIcon, MoneyIcon, BookBookmark, ShoppingBag, Storefront, ArrowCircleUp, ArrowSquareUp, ArrowCircleDown, UserIcon, HandPalmIcon, HandCoinsIcon, CaretCircleDoubleUpIcon, CurrencyCircleDollarIcon, AndroidLogo, ChartPieSliceIcon, HouseLineIcon } from "@phosphor-icons/react"
+import { SquaresFourIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, GearIcon, QuestionIcon, MagnifyingGlassIcon, DatabaseIcon, ChartLineIcon, FileIcon, CommandIcon, WalletIcon, MoneyIcon, BookBookmark, Bank, ShoppingBag, Storefront, ArrowCircleUp, ArrowSquareUp, ArrowCircleDown, UserIcon, HandPalmIcon, HandCoinsIcon, CaretCircleDoubleUpIcon, CurrencyCircleDollarIcon, AndroidLogo, ChartPieSliceIcon, HouseLineIcon } from "@phosphor-icons/react"
 
 const data = {
   user: {
@@ -69,6 +69,13 @@ const data = {
       url: "/piutang",
       icon: (
         <BookBookmark />
+      ),
+    },
+    {
+      title: "Titip Dana",
+      url: "/titip-dana",
+      icon: (
+        <Bank />
       ),
     },
     {

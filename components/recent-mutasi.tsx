@@ -49,7 +49,8 @@ export function RecentMutasi() {
   const [isDownloadingPengeluaran, setIsDownloadingPengeluaran] = useState(false)
   const [isDownloadingPemasukan, setIsDownloadingPemasukan] = useState(false)
   const [isDownloadingPiutang, setIsDownloadingPiutang] = useState(false)
-  const [downloadType, setDownloadType] = useState<"mutasi" | "pembelian" | "penjualan" | "pengeluaran" | "pemasukan" | "piutang">("mutasi")
+  const [isDownloadingTitipDana, setIsDownloadingTitipDana] = useState(false)
+  const [downloadType, setDownloadType] = useState<"mutasi" | "pembelian" | "penjualan" | "pengeluaran" | "pemasukan" | "piutang" | "titip_dana">("mutasi")
 
   const getAllMutasiData = async () => {
     // 1. Ambil data Kas
@@ -816,6 +817,95 @@ export function RecentMutasi() {
     }
   }
 
+  const handleDownloadTitipDanaExcel = async () => {
+    try {
+      setIsDownloadingTitipDana(true)
+
+      const { data: titip_danaData } = await supabase
+        .from('titip_dana')
+        .select('*')
+        .eq('is_deleted', false)
+        .order('tanggal', { ascending: true })
+
+      const rawTitipDanaList = titip_danaData || []
+
+      const titip_danaList = rawTitipDanaList.filter((p: any) => {
+        if (!startDate && !endDate) return true
+
+        const itemDate = new Date(p.tanggal).setHours(0, 0, 0, 0)
+
+        if (startDate && endDate) {
+          return itemDate >= new Date(startDate).setHours(0, 0, 0, 0) && itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
+        } else if (startDate) {
+          return itemDate >= new Date(startDate).setHours(0, 0, 0, 0)
+        } else if (endDate) {
+          return itemDate <= new Date(endDate).setHours(0, 0, 0, 0)
+        }
+        return true
+      })
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet("Data TitipDana")
+
+      worksheet.columns = [
+        { header: "No", key: "no", width: 5 },
+        { header: "Tanggal", key: "tanggal", width: 15 },
+        { header: "Penitip", key: "peminjam", width: 30 },
+        { header: "Keterangan", key: "keterangan", width: 30 },
+        { header: "Saldo Saat Ini (Rp)", key: "sisa", width: 20 },
+        { header: "Status", key: "status", width: 15 },
+      ]
+
+      const headerRow = worksheet.getRow(1)
+      headerRow.eachCell((cell, colNumber) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3ECF8E" } }
+        cell.font = { bold: true, color: { argb: "FF000000" } }
+        if (colNumber === 5) {
+          cell.alignment = { vertical: "middle", horizontal: "right" }
+        } else if (colNumber === 3 || colNumber === 4) {
+          cell.alignment = { vertical: "middle", horizontal: "left" }
+        } else {
+          cell.alignment = { vertical: "middle", horizontal: "center" }
+        }
+        cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
+      })
+
+      titip_danaList.forEach((p, idx) => {
+        const sisaSaldo = p.saldo !== undefined ? Number(p.saldo) : (p.status === 'selesai' ? 0 : Number(p.jumlah))
+
+        const row = worksheet.addRow({
+          no: idx + 1,
+          tanggal: formatTanggalOutput(p.tanggal),
+          peminjam: p.nama,
+          keterangan: p.keterangan || "-",
+          sisa: sisaSaldo,
+          status: p.status === "selesai" ? "Selesai" : "Aktif"
+        })
+
+        row.eachCell((cell) => {
+          cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } }
+        })
+
+        row.getCell("no").alignment = { horizontal: "center" }
+        row.getCell("tanggal").alignment = { horizontal: "center" }
+        row.getCell("status").alignment = { horizontal: "center" }
+        row.getCell("sisa").alignment = { horizontal: "right" }
+
+        row.getCell("sisa").numFmt = "#,##0"
+      })
+
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+      saveAs(blob, "Data_Titip_Dana.xlsx")
+
+    } catch (error) {
+      console.error("Gagal mengunduh Excel TitipDana:", error)
+    } finally {
+      setIsDownloadingTitipDana(false)
+      setIsDownloadModalOpen(false)
+    }
+  }
+
   const executeDownload = () => {
     if (downloadType === "mutasi") {
       handleDownloadExcel()
@@ -829,10 +919,12 @@ export function RecentMutasi() {
       handleDownloadPemasukanExcel()
     } else if (downloadType === "piutang") {
       handleDownloadPiutangExcel()
+    } else if (downloadType === "titip_dana") {
+      handleDownloadTitipDanaExcel()
     }
   }
 
-  const isAnyDownloading = isDownloading || isDownloadingPembelian || isDownloadingPenjualan || isDownloadingPengeluaran || isDownloadingPemasukan || isDownloadingPiutang
+  const isAnyDownloading = isDownloading || isDownloadingPembelian || isDownloadingPenjualan || isDownloadingPengeluaran || isDownloadingPemasukan || isDownloadingPiutang || isDownloadingTitipDana
 
   return (
     <>
@@ -906,6 +998,15 @@ export function RecentMutasi() {
                 className="cursor-pointer"
               >
                 Data Piutang
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setDownloadType("titip_dana")
+                  setIsDownloadModalOpen(true)
+                }}
+                className="cursor-pointer"
+              >
+                Data Titip Dana
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1002,7 +1103,7 @@ export function RecentMutasi() {
       <Dialog open={isDownloadModalOpen} onOpenChange={setIsDownloadModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Unduh {downloadType === "mutasi" ? "Mutasi" : downloadType === "pembelian" ? "Pembelian" : downloadType === "penjualan" ? "Penjualan" : downloadType === "pengeluaran" ? "Pengeluaran" : downloadType === "pemasukan" ? "Pemasukan" : "Piutang"} Excel</DialogTitle>
+            <DialogTitle>Unduh {downloadType === "mutasi" ? "Mutasi" : downloadType === "pembelian" ? "Pembelian" : downloadType === "penjualan" ? "Penjualan" : downloadType === "pengeluaran" ? "Pengeluaran" : downloadType === "pemasukan" ? "Pemasukan" : downloadType === "piutang" ? "Piutang" : "Titip Dana"} Excel</DialogTitle>
             <DialogDescription>
               Pilih rentang tanggal data {downloadType} yang ingin diunduh. <br />Biarkan kosong untuk mengunduh semua data.
             </DialogDescription>
