@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { Sun, Moon, ChartLine as ChartLineIcon, Plus, Palette } from "@phosphor-icons/react"
+import { Sun, Moon, ChartLine as ChartLineIcon, Plus, Palette, Bank } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -137,6 +137,16 @@ export function DraggableFab() {
             title="Mutasi"
           >
             <ChartLineIcon size={20} weight="bold" />
+          </button>
+          <button
+            onClick={() => {
+              router.push("/titip-dana")
+              setIsOpen(false)
+            }}
+            className="w-12 h-12 bg-card border shadow-md rounded-full flex items-center justify-center text-primary hover:bg-muted/50 transition-colors"
+            title="Titip Dana"
+          >
+            <Bank size={20} weight="bold" />
           </button>
         </div>
 

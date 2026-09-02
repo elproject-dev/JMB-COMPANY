@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react"
 
-import { WalletIcon, CurrencyCircleDollarIcon, ArrowCircleDown, ArrowCircleUp, ShoppingCartIcon } from "@phosphor-icons/react"
+import { WalletIcon, CurrencyCircleDollarIcon, ArrowCircleDown, ArrowCircleUp } from "@phosphor-icons/react"
 
 import { supabase } from "@/lib/supabase"
+import { Dices } from "lucide-react"
 
 export function SectionCards() {
   const [totalSaldo, setTotalSaldo] = useState(0)
@@ -135,7 +136,7 @@ export function SectionCards() {
           <h3 className="text-lg font-bold tracking-tight text-primary mt-1">Rp {formatUang(animTotalPembelian)}</h3>
         </div>
         <div className="absolute top-0 right-0 p-4 text-primary opacity-50">
-          <ShoppingCartIcon weight="duotone" className="w-5 h-5" />
+          <Dices className="w-5 h-5" />
         </div>
       </div>
 
