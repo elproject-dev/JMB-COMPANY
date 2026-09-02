@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -411,6 +411,54 @@ export default function PiutangPage() {
   const totalPages = Math.ceil(piutang.length / itemsPerPage)
   const currentPiutang = piutang.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
+  // Hook untuk efek hitung animasi (smooth)
+  function useCountUp(endValue: number, duration: number = 1500) {
+    const [count, setCount] = useState(0)
+
+    useEffect(() => {
+      if (endValue === 0) {
+        setCount(0)
+        return
+      }
+
+      let startTime: number | null = null
+      let animationFrame: number
+
+      const easeOutExpo = (t: number): number => {
+        return t === 1 ? 1 : 1 - Math.pow(4, -5 * t)
+      }
+
+      const step = (currentTime: number) => {
+        if (!startTime) startTime = currentTime
+        const progress = Math.min((currentTime - startTime) / duration, 1)
+
+        setCount(Math.floor(easeOutExpo(progress) * endValue))
+
+        if (progress < 1) {
+          animationFrame = window.requestAnimationFrame(step)
+        } else {
+          setCount(endValue)
+        }
+      }
+
+      animationFrame = window.requestAnimationFrame(step)
+
+      return () => {
+        if (animationFrame) window.cancelAnimationFrame(animationFrame)
+      }
+    }, [endValue, duration])
+
+    return count
+  }
+
+  const valPiutangBerjalan = useMemo(() => piutang.reduce((acc, curr) => acc + (curr.status !== 'lunas' ? (Number(curr.sisa_hutang !== undefined ? curr.sisa_hutang : curr.jumlah) || 0) : 0), 0), [piutang])
+  const valPiutangBelumLunas = useMemo(() => piutang.filter(p => p.status !== 'lunas').length, [piutang])
+
+  const animTotalPiutang = useCountUp(valPiutangBerjalan)
+  const animUangKeluar = useCountUp(totalUangKeluar)
+  const animUangMasuk = useCountUp(totalUangMasuk)
+  const animBelumLunas = useCountUp(valPiutangBelumLunas)
+
   return (
     <SidebarProvider
       style={
@@ -433,7 +481,7 @@ export default function PiutangPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-violet-600">
-                      Rp {formatRibuan(String(piutang.reduce((acc, curr) => acc + (curr.status !== 'lunas' ? (Number(curr.sisa_hutang !== undefined ? curr.sisa_hutang : curr.jumlah) || 0) : 0), 0)))}
+                      Rp {formatRibuan(String(animTotalPiutang))}
                     </div>
                   </CardContent>
                 </Card>
@@ -443,7 +491,7 @@ export default function PiutangPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-red-600">
-                      Rp {formatRibuan(String(totalUangKeluar))}
+                      Rp {formatRibuan(String(animUangKeluar))}
                     </div>
                   </CardContent>
                 </Card>
@@ -453,7 +501,7 @@ export default function PiutangPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      Rp {formatRibuan(String(totalUangMasuk))}
+                      Rp {formatRibuan(String(animUangMasuk))}
                     </div>
                   </CardContent>
                 </Card>
@@ -463,7 +511,7 @@ export default function PiutangPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">
-                      {piutang.filter(p => p.status !== 'lunas').length} <span className="text-sm font-normal text-muted-foreground">Catatan</span>
+                      {animBelumLunas} <span className="text-sm font-normal text-muted-foreground">Catatan</span>
                     </div>
                   </CardContent>
                 </Card>
